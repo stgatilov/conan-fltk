@@ -73,7 +73,9 @@ class FltkConan(ConanFile):
         cmake.install()
         self.copy(self._source_subfolder + "/COPYING", dst="licenses", keep_path=False, ignore_case=True)
         # these headers and libs come from dependencies
-        shutil.rmtree(self.package_folder + "/include/FL/images")
+        deps_includes = self.package_folder + "/include/FL/images"
+        if os.path.isdir(deps_includes):
+            shutil.rmtree(deps_includes)
         removed_libs = ["z", "jpeg", "png"]
         for rlib in removed_libs:
             for fn in glob.glob(self.package_folder + "/*/*fltk_" + rlib + "*.*"):
@@ -87,3 +89,9 @@ class FltkConan(ConanFile):
         if self.options.shared:
             self.cpp_info.defines.append("FL_DLL")
         self.cpp_info.libs = tools.collect_libs(self)
+        if self.settings.os == "Linux":
+            self.cpp_info.libs.extend(['m', 'dl', 'X11', 'Xext'])
+            if self.options.use_threads:
+                self.cpp_info.libs.extend(['pthread'])
+            if self.options.use_gl:
+                self.cpp_info.libs.extend(['GL', 'GLU'])
